@@ -44,7 +44,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Malgun Gothic','Apple SD Goth
 .fav-icon{width:28px;height:28px;border-radius:6px;background:#f0f0ec;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#888;flex-shrink:0;overflow:hidden}
 .fav-icon img{width:100%;height:100%;object-fit:cover;border-radius:6px}
 .card-meta{flex:1;min-width:0}
-.card-title{font-size:13px;font-weight:500;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4}
+.card-title{display:block;font-size:13px;font-weight:500;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;text-decoration:none;cursor:pointer}
+.card-title:hover{text-decoration:underline}
+a.fav-icon{cursor:pointer}
 .card-domain{font-size:11px;color:#aaa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
 .card-btns{display:flex;gap:2px;flex-shrink:0}
 .ic-btn{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:6px;border:none;background:transparent;cursor:pointer;color:#ccc;font-size:15px;transition:background 0.12s;line-height:1}
@@ -144,6 +146,7 @@ function save() {
   } catch(e) {}
 }
 
+function normUrl(url) { url=(url||'').trim(); if(url && !/^https?:\/\//i.test(url)) url='https://'+url; return url; }
 function domain(url) { try { return new URL(url).hostname.replace('www.',''); } catch(e){return '';} }
 function favUrl(url) { try { return `https://www.google.com/s2/favicons?domain=${new URL(url).hostname}&sz=32`; } catch(e){return '';} }
 function initial(t) { return (t||'?')[0].toUpperCase(); }
@@ -212,13 +215,14 @@ function renderContent() {
   Object.entries(grouped).forEach(([cat, items]) => {
     h += `<div class="sec-label">${cat} (${items.length})</div><div class="grid">`;
     items.forEach(b => {
-      const fav = favUrl(b.url);
+      const href = normUrl(b.url);
+      const fav = favUrl(href);
       h += `<div class="card">
         <div class="card-top">
-          <div class="fav-icon"><img src="${fav}" onerror="this.parentNode.textContent='${initial(b.title)}'"></div>
+          <a class="fav-icon" href="${href}" target="_blank" rel="noopener"><img src="${fav}" onerror="this.parentNode.textContent='${initial(b.title)}'"></a>
           <div class="card-meta">
-            <div class="card-title" title="${b.title}">${b.title}</div>
-            <div class="card-domain">${domain(b.url)}</div>
+            <a class="card-title" href="${href}" target="_blank" rel="noopener" title="${b.title}">${b.title}</a>
+            <div class="card-domain">${domain(href)}</div>
           </div>
           <div class="card-btns">
             <button class="ic-btn${b.star?' on':''}" data-sid="${b.id}" title="즐겨찾기">${b.star?'⭐':'☆'}</button>
@@ -228,7 +232,7 @@ function renderContent() {
         ${b.memo?`<div class="card-memo">${b.memo}</div>`:''}
         <div class="card-foot">
           <span class="badge">${b.cat}</span>
-          <a class="ext-link" href="${b.url}" target="_blank">↗ 열기</a>
+          <a class="ext-link" href="${href}" target="_blank" rel="noopener">↗ 열기</a>
         </div>
       </div>`;
     });
@@ -274,7 +278,7 @@ document.getElementById('overlay').onclick = e => { if(e.target===document.getEl
 
 document.getElementById('btnSave').onclick = () => {
   const title = document.getElementById('fTitle').value.trim();
-  const url = document.getElementById('fUrl').value.trim();
+  const url = normUrl(document.getElementById('fUrl').value);
   if (!title||!url) { alert('제목과 URL을 입력해주세요.'); return; }
   const cat = document.getElementById('fCat').value;
   const memo = document.getElementById('fMemo').value.trim();
